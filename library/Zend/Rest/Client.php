@@ -262,7 +262,20 @@ class Zend_Rest_Client extends Zend_Service_Abstract
             $data = array_slice($args, 1) + $this->_data;
             $response = $this->{'rest' . $method}($args[0], $data);
             $this->_data = array();//Initializes for next Rest method.
-            return new Zend_Rest_Client_Result($response->getBody());
+            // TODO: Mejorar Workaround.
+            /* 
+            Problema: 
+            Zend_Rest_Client espera siempre una respuesta XML, causando un error
+            al recibir una respuesta de tipo JSON.
+            
+            Fuente workaround:
+            https://framework.zend.com/issues/browse/ZF-10272
+            */
+            if ($response->getHeader("Content-Type") == "application/json") {
+                return $response->getBody();
+            } else {
+                return new Zend_Rest_Client_Result($response->getBody());
+            }
         } else {
             // More than one arg means it's definitely a Zend_Rest_Server
             if (sizeof($args) == 1) {
